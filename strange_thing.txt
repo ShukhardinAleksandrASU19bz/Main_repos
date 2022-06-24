@@ -1,8 +1,12 @@
+#include <SoftwareSerial.h>
+#include <Wire.h>
+
 // C++ code
 //
 #define RED 11  // присваиваем имя RED для пина 11
 #define GRN 12 // присваиваем имя GRN для пина 12
 #define BLU 13  // присваиваем имя BLU для пина 13
+int SensorTemp = 0;
 
 
 void setup()
@@ -15,8 +19,27 @@ void setup()
 
 void loop()
 {
+  Serial.begin(9600);  
   digitalWrite(LED_BUILTIN, HIGH);
-  digitalWrite(RED, HIGH);
+  int readtemp = analogRead(SensorTemp);
+  float voltage = readtemp * 5;
+  voltage /=  1024;
+  float temperatureC = (voltage - 0.5) * 100;
+  if (temperatureC < 10) { digitalWrite(RED, HIGH);
+    digitalWrite(GRN, LOW);
+    digitalWrite(RED, LOW);
+   }
+  if (temperatureC > 10 && temperatureC < 60) { digitalWrite(RED, LOW);
+    digitalWrite(GRN, HIGH);
+    digitalWrite(RED, LOW);
+    }
+  if (temperatureC > 60) { digitalWrite(RED, LOW);
+    digitalWrite(GRN, LOW);
+    digitalWrite(RED, HIGH);
+    }
+ // Serial.print(temperatureC); 
+ // Serial.println(" C");
+ /* digitalWrite(RED, HIGH);
   digitalWrite(GRN, LOW);
   digitalWrite(RED, LOW);
   delay(1000); // Wait for 1000 millisecond(s)
@@ -26,7 +49,7 @@ void loop()
   delay(1000); // Wait for 1000 millisecond(s)
   digitalWrite(RED, LOW);
   digitalWrite(GRN, LOW);
-  digitalWrite(RED, HIGH);  
+  digitalWrite(RED, HIGH);  */
   delay(1000); // Wait for 1000 millisecond(s)
   digitalWrite(LED_BUILTIN, LOW);
 }

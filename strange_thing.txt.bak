@@ -1,0 +1,32 @@
+// C++ code
+//
+#define RED 11  // присваиваем имя RED для пина 11
+#define GRN 12 // присваиваем имя GRN для пина 12
+#define BLU 13  // присваиваем имя BLU для пина 13
+
+
+void setup()
+{
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(RED, OUTPUT);  // используем Pin11 для вывода
+  pinMode(GRN, OUTPUT); // используем Pin12 для вывода
+  pinMode(BLU, OUTPUT);  // используем Pin13 для вывода
+}
+
+void loop()
+{
+  digitalWrite(LED_BUILTIN, HIGH);
+  digitalWrite(RED, HIGH);
+  digitalWrite(GRN, LOW);
+  digitalWrite(RED, LOW);
+  delay(1000); // Wait for 1000 millisecond(s)
+  digitalWrite(RED, LOW);
+  digitalWrite(GRN, HIGH);
+  digitalWrite(RED, LOW);  
+  delay(1000); // Wait for 1000 millisecond(s)
+  digitalWrite(RED, LOW);
+  digitalWrite(GRN, LOW);
+  digitalWrite(RED, HIGH);  
+  delay(1000); // Wait for 1000 millisecond(s)
+  digitalWrite(LED_BUILTIN, LOW);
+}
