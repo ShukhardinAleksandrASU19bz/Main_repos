@@ -1,66 +1,97 @@
 #include <SoftwareSerial.h>
-//#include <ESP8266WiFi.h>
 
 // C++ code
 #define RED 9  
 #define GRN 10 
 #define BLU 11 
 #define PIR 12
-int SensorTemp = 0;
+#define SSID "RT107"
+#define PASS "12345"
+#define HOST  "192.168.100.206"
+#define PORT  "80";
+#define SensorTemp  0
+
+String ID = "1"; // ID  
+String key = "1"; //key
+
+SoftwareSerial espSerial(2,3);
 
 void setup()
 {
-  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RED, OUTPUT); 
   pinMode(GRN, OUTPUT); 
   pinMode(BLU, OUTPUT);  
   pinMode(PIR, INPUT);
+  Serial.begin(9600);
+  espSerial.begin(9600); 
+  sendespSerial("AT");
+  delay(2000);
+  if (espSerial.find("OK"))
+  {
+    Serial.println("Connection ok!");
+    connectWiFi();
+  }
 }
 
 void loop()
 {
-  Serial.begin(9600);  
+    
   int readPIR = digitalRead(PIR);
   int readtemp = analogRead(SensorTemp);
-  Serial.println(readPIR);
   float voltage = readtemp * 5;
   voltage /=  1024;
   float temperatureC = (voltage - 0.5) * 100;
-  LED(readPIR, temperatureC);   
-  Serial.print(temperatureC); 
-  Serial.println(" C");
-  delay(1000); 
+  LED(readPIR, temperatureC);    
+  String GET = "GET /get?cid=" + ID + "&key=" + key + "&temp="; // запрос
+      
+  if (readPIR == 1) {
+    sendDate();
+    String cmd = GET + temperatureC;
+    cmd += " HTTP/1.1\r\n";
+    //cmd += HOST;
+    //cmd += "\r\n";
+    Serial.println();
+    espSerial.print("AT+CIPSEND=");
+    espSerial.print(cmd.length());
+    Serial.print(cmd);
+ 	if (espSerial.find( ">" ) )
+      {
+      Serial.print(">");      
+      Serial.print(cmd);
+      delay(30);
+      }
+    else
+      {
+        sendespSerial( "AT+CIPCLOSE" );
+      }    
+    }   
+    delay(1000);   
 }
 
-void LED(int readPIR, int tempC)
+void LED(int readPIR, int tempC) //работа датчика движения
 {
   //обнаружение движения
   if (readPIR)
   {
-    Serial.print(readPIR);
-    Serial.println("Motion detected");
     showRGBX(tempC);    
-    //delay(1000);
   }
   // нет движения
   else
   {
-    Serial.print(readPIR);
-    Serial.println("No motion");
     digitalWrite(RED, LOW);
     digitalWrite(GRN, LOW);
     digitalWrite(BLU, LOW);
   }
 }
 
-void showRGBX(int tempC)
+void showRGBX(int tempC) //метод задания цвета диода
 {
 int redIntensity;
 int greenIntensity;
 int blueIntensity;
 int delta;
 int color;
-
+  
 if (tempC<0 )
 {
   redIntensity = 0;
@@ -104,8 +135,60 @@ if (tempC>40 )
   redIntensity = 255;
   greenIntensity =0;
   blueIntensity = 0;
-} 
+}  
+
 analogWrite(RED, redIntensity);
 analogWrite(BLU, blueIntensity);
 analogWrite(GRN, greenIntensity);
+}
+
+boolean connectWiFi() //  установка Wi-Fi соединения 
+{
+  sendespSerial("AT+CWMODE=1");
+  delay(3000);
+  String cmd = "AT+CWJAP=\"";
+  cmd += SSID;
+  cmd += "\",\"";
+  cmd += PASS;
+  cmd +="\"";
+  sendespSerial(cmd);
+  delay(3000);
+  if (espSerial.find("OK"))
+  	{ 
+    	Serial.println("Connection:OK");
+    	return true;
+  	}
+  else
+  {
+  		Serial.println("Connection:FAIL");
+    	return false;
+  }
+  
+  cmd = "AT+CIPMUX=0";
+  sendespSerial(cmd);  
+}
+
+void sendespSerial(String cmd) //отправка комманд на esp
+{
+  Serial.print("SEND: ");
+  Serial.println(cmd);
+  espSerial.println(cmd);
+}
+
+void sendDate() //метод отправки данных
+{
+  String cmd = "AT+CIPSTART=\"TCP\",\"";
+  cmd += HOST;
+  cmd += "\",\"";
+  cmd += PORT;
+  cmd += "\"";
+
+  sendespSerial(cmd);
+  Serial.print(cmd);
+  delay(1000);
+   if ( espSerial.find( "Error" ) )
+  {
+    Serial.print( "RECEIVED: Error\n" );
+    return;
+  }
 }
