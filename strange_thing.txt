@@ -1,20 +1,19 @@
 #include <SoftwareSerial.h>
-#include <Wire.h>
+//#include <ESP8266WiFi.h>
 
 // C++ code
-//
-#define RED 13  // присваиваем имя RED для пина 11
-#define GRN 11 // присваиваем имя GRN для пина 12
-#define BLU 12  // присваиваем имя BLU для пина 13
-#define PIR 10 
+#define RED 9  
+#define GRN 10 
+#define BLU 11 
+#define PIR 12
 int SensorTemp = 0;
 
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(RED, OUTPUT);  // используем Pin11 для вывода
-  pinMode(GRN, OUTPUT); // используем Pin12 для вывода
-  pinMode(BLU, OUTPUT);  // используем Pin13 для вывода
+  pinMode(RED, OUTPUT); 
+  pinMode(GRN, OUTPUT); 
+  pinMode(BLU, OUTPUT);  
   pinMode(PIR, INPUT);
 }
 
@@ -23,34 +22,25 @@ void loop()
   Serial.begin(9600);  
   int readPIR = digitalRead(PIR);
   int readtemp = analogRead(SensorTemp);
+  Serial.println(readPIR);
   float voltage = readtemp * 5;
   voltage /=  1024;
   float temperatureC = (voltage - 0.5) * 100;
-  
+  LED(readPIR, temperatureC);   
+  Serial.print(temperatureC); 
+  Serial.println(" C");
+  delay(1000); 
+}
+
+void LED(int readPIR, int tempC)
+{
   //обнаружение движения
   if (readPIR)
   {
     Serial.print(readPIR);
     Serial.println("Motion detected");
-    if (temperatureC < 10) 
-    { 
-      digitalWrite(RED, LOW);
-      digitalWrite(GRN, LOW);
-      digitalWrite(BLU, HIGH);
-   	}
-    if (temperatureC > 10 && temperatureC < 60) 
-    { 
-      digitalWrite(RED, LOW);
-      digitalWrite(GRN, HIGH);
-      digitalWrite(BLU, LOW);
-    }
-  	if (temperatureC > 60) 
-    { 
-      digitalWrite(RED, HIGH);
-      digitalWrite(GRN, LOW);
-      digitalWrite(BLU, LOW);
-    }
-     delay(1000);
+    showRGBX(tempC);    
+    //delay(1000);
   }
   // нет движения
   else
@@ -61,8 +51,61 @@ void loop()
     digitalWrite(GRN, LOW);
     digitalWrite(BLU, LOW);
   }
-  
-  Serial.print(temperatureC); 
-  Serial.println(" C");
-  delay(1000); // Wait for 1000 millisecond(s)
+}
+
+void showRGBX(int tempC)
+{
+int redIntensity;
+int greenIntensity;
+int blueIntensity;
+int delta;
+int color;
+
+if (tempC<0 )
+{
+  redIntensity = 0;
+  greenIntensity =0;
+  blueIntensity = 255;
+}
+if (tempC>=0 && tempC<10)
+{
+  delta=0;
+  color = tempC-delta;
+  redIntensity = 0;
+  greenIntensity =0+color*15;
+  blueIntensity = 255-color*15;
+}
+if (tempC>=10 && tempC<20)
+{
+  delta=10;
+  color = tempC-delta;
+  redIntensity = 0;
+  greenIntensity =150+color*10;
+  blueIntensity = 105-color*10;
+} 
+if (tempC>=20 && tempC<30)
+{
+  delta=20;
+  color = tempC-delta;
+  redIntensity = 0+color*15;
+  greenIntensity =255-color*15;
+  blueIntensity = 0;
+} 
+if (tempC>=30 && tempC<40)
+{
+  delta=30;
+  color = tempC-delta;
+  redIntensity = 150+color*10;
+  greenIntensity =105-color*10;
+  blueIntensity = 0;
+} 
+if (tempC>40 )
+{
+  redIntensity = 255;
+  greenIntensity =0;
+  blueIntensity = 0;
+} 
+analogWrite(RED, redIntensity);
+analogWrite(BLU, blueIntensity);
+analogWrite(GRN, greenIntensity);
 }
